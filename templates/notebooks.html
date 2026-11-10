@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}食事ノート一覧{% endblock %}
+{% block content %}
+  <h1>自分の食事ノート</h1>
+  <p><a href="{{ url_for('create_notebook') }}">ノートを作成</a></p>
+  {% if notebooks %}
+    <ul>
+      {% for notebook in notebooks %}
+        <li><a href="{{ url_for('notebook_detail', notebook_id=notebook['id']) }}">{{ notebook["name"] }}</a></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>食事ノートはまだありません。</p>
+  {% endif %}
+{% endblock %}
