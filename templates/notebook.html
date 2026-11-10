@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}{{ notebook["name"] }}{% endblock %}
+{% block content %}
+  <h1>{{ notebook["name"] }}</h1>
+  <p>このノートに食事記録はまだありません。</p>
+  <p><a href="{{ url_for('notebooks') }}">一覧に戻る</a></p>
+{% endblock %}
