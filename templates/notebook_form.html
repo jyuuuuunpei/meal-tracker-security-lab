@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}ノート作成{% endblock %}
+{% block content %}
+  <h1>食事ノートを作成</h1>
+  {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+  <form method="post" action="{{ url_for('create_notebook') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>ノート名 <input name="name" maxlength="100" required value="{{ name }}"></label>
+    <button type="submit">作成</button>
+  </form>
+{% endblock %}
