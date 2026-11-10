@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}食事ノート{% endblock %}</title>
+</head>
+<body>
+  <header>
+    <a href="{{ url_for('notebooks') }}">食事ノート</a>
+    {% if current_user %}
+      <span>ログイン中: {{ current_user["username"] }}</span>
+      <form method="post" action="{{ url_for('logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit">ログアウト</button>
+      </form>
+    {% endif %}
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
