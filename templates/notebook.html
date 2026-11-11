@@ -2,6 +2,30 @@
 {% block title %}{{ notebook["name"] }}{% endblock %}
 {% block content %}
   <h1>{{ notebook["name"] }}</h1>
-  <p>このノートに食事記録はまだありません。</p>
+  <h2>食事記録を追加</h2>
+  <form method="post" action="{{ url_for('add_meal', notebook_id=notebook['id']) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>食事日 <input type="date" name="meal_date" required></label>
+    <label>食事区分
+      <select name="category" required>
+        {% for category in categories %}<option>{{ category }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>料理名 <input name="name" required></label>
+    <button type="submit">追加</button>
+  </form>
+  <h2>食事記録</h2>
+  <form method="get">
+    <label>食事日 <input type="date" name="date" value="{{ meal_date }}"></label>
+    <label>料理名 <input name="q" value="{{ query }}"></label>
+    <button type="submit">検索</button>
+  </form>
+  <ul>
+    {% for meal in meals %}
+      <li>{{ meal["meal_date"] }} {{ meal["category"] }} {{ meal["name"] }}</li>
+    {% else %}
+      <li>該当する食事記録はありません。</li>
+    {% endfor %}
+  </ul>
   <p><a href="{{ url_for('notebooks') }}">一覧に戻る</a></p>
 {% endblock %}
