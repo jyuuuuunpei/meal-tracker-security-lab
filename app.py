@@ -1,6 +1,7 @@
 import hmac
 import secrets
 import sqlite3
+from datetime import date
 from functools import wraps
 from pathlib import Path
 
@@ -32,7 +33,27 @@ CREATE TABLE IF NOT EXISTS notebooks (
     name TEXT NOT NULL CHECK (length(trim(name)) > 0),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS calorie_goals (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    target INTEGER NOT NULL CHECK (target > 0)
+);
+CREATE TABLE IF NOT EXISTS meals (
+    id INTEGER PRIMARY KEY,
+    notebook_id INTEGER NOT NULL REFERENCES notebooks(id) ON DELETE CASCADE,
+    meal_date TEXT NOT NULL,
+    category TEXT NOT NULL,
+    name TEXT NOT NULL CHECK (length(trim(name)) > 0)
+);
 """
+
+MEAL_CATEGORIES = ("朝食", "昼食", "夕食", "間食")
+
+
+def valid_date(value):
+    try:
+        return date.fromisoformat(value).isoformat() == value
+    except ValueError:
+        return False
 
 
 def create_app(test_config=None):
@@ -177,7 +198,57 @@ def create_app(test_config=None):
         ).fetchone()
         if notebook is None:
             abort(404)
-        return render_template("notebook.html", notebook=notebook)
+        meal_date = request.args.get("date", "")
+        query = request.args.get("q", "").strip()
+        if meal_date and not valid_date(meal_date):
+            abort(400, description="食事日はYYYY-MM-DDで指定してください。")
+        meals = search_meals(notebook_id, meal_date, query)
+        return render_template(
+            "notebook.html", notebook=notebook, meals=meals,
+            meal_date=meal_date, query=query, categories=MEAL_CATEGORIES,
+        )
+
+    @app.post("/notebooks/<int:notebook_id>/meals")
+    @login_required
+    def add_meal(notebook_id):
+        db = get_db()
+        notebook = db.execute(
+            "SELECT id FROM notebooks WHERE id = ? AND owner_id = ?",
+            (notebook_id, g.user["id"]),
+        ).fetchone()
+        if notebook is None:
+            abort(404)
+        meal_date = request.form.get("meal_date", "")
+        category = request.form.get("category", "")
+        name = request.form.get("name", "").strip()
+        if not valid_date(meal_date) or category not in MEAL_CATEGORIES or not name:
+            abort(400, description="食事日、区分、料理名を確認してください。")
+        db.execute(
+            "INSERT INTO meals (notebook_id, meal_date, category, name) VALUES (?, ?, ?, ?)",
+            (notebook_id, meal_date, category, name),
+        )
+        db.commit()
+        return redirect(url_for("notebook_detail", notebook_id=notebook_id))
+
+    @app.route("/calorie-goal", methods=("GET", "POST"))
+    @login_required
+    def calorie_goal():
+        db = get_db()
+        if request.method == "POST":
+            raw = request.form.get("target", "").strip()
+            if not raw.isascii() or not raw.isdecimal() or len(raw) > 9 or int(raw) < 1:
+                abort(400, description="目標摂取カロリーは正の整数で入力してください。")
+            db.execute(
+                "INSERT INTO calorie_goals (user_id, target) VALUES (?, ?) "
+                "ON CONFLICT(user_id) DO UPDATE SET target = excluded.target",
+                (g.user["id"], int(raw)),
+            )
+            db.commit()
+            return redirect(url_for("calorie_goal"))
+        goal = db.execute(
+            "SELECT target FROM calorie_goals WHERE user_id = ?", (g.user["id"],)
+        ).fetchone()
+        return render_template("calorie_goal.html", goal=goal)
 
     @app.errorhandler(400)
     def bad_request(error):
@@ -192,6 +263,16 @@ def create_app(test_config=None):
         ), 404
 
     return app
+
+
+def search_meals(notebook_id, meal_date, query):
+    db = get_db()
+    return db.execute(
+        "SELECT meal_date, category, name FROM meals "
+        "WHERE notebook_id = ? AND (? = '' OR meal_date = ?) "
+        "AND instr(name, ?) > 0 ORDER BY meal_date DESC, id",
+        (notebook_id, meal_date, meal_date, query),
+    ).fetchall()
 
 
 def get_db():
