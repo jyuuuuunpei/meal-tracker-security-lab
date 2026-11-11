@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}目標摂取カロリー{% endblock %}
+{% block content %}
+  <h1>目標摂取カロリー</h1>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>1日の目標 (kcal)
+      <input type="number" name="target" min="1" max="999999999" required
+             value="{{ goal['target'] if goal else '' }}">
+    </label>
+    <button type="submit">保存</button>
+  </form>
+{% endblock %}
