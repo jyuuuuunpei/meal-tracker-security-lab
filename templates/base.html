@@ -10,6 +10,7 @@
     <a href="{{ url_for('notebooks') }}">食事ノート</a>
     {% if current_user %}
       <span>ログイン中: {{ current_user["username"] }}</span>
+      <a href="{{ url_for('calorie_goal') }}">目標摂取カロリー</a>
       <form method="post" action="{{ url_for('logout') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit">ログアウト</button>
