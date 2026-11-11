@@ -4,7 +4,7 @@
 
 ## 状態
 
-Sprint 1を実装済みです。機能、権限、4回のSprintの完了条件は [REQUIREMENTS.md](REQUIREMENTS.md) を参照してください。Codexの作業ルールは [AGENTS.md](AGENTS.md) にあります。
+Sprint 2を実装済みです。食事記録の登録・検索と利用者別の目標摂取カロリーを利用できます。既存のローカルDBを使う場合も、起動前に init-db を再実行して追加テーブルを作成します。機能、権限、4回のSprintの完了条件は [REQUIREMENTS.md](REQUIREMENTS.md) を参照してください。Codexの作業ルールは [AGENTS.md](AGENTS.md) にあります。
 
 ## ローカル起動
 
